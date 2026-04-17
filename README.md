@@ -1,3 +1,4 @@
+
 # ClauseWatch 🔍
 
 **ClauseWatch** is an open-source, AI-powered monitor that watches Terms of Service agreements (or any webpage) and explains changes in plain English.
