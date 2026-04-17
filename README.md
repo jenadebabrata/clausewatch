@@ -1,5 +1,16 @@
+<div align="center">
+  <h1>ClauseWatch 🔍</h1>
+  <p><b>AI-Powered Terms of Service Monitor</b></p>
 
-# ClauseWatch 🔍
+  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/node-%3E%3D%2018.0.0-brightgreen" alt="Node Version">
+  <img src="https://img.shields.io/badge/AI-OpenRouter%20%7C%20Mistral-purple" alt="AI Engine">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
+</div>
+<br/>
+
+
 
 **ClauseWatch** is an open-source, AI-powered monitor that watches Terms of Service agreements (or any webpage) and explains changes in plain English.
 
