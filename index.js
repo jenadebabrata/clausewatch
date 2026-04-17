@@ -2,12 +2,26 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cron = require('node-cron');
+const fs = require('fs'); // NEW: The File System module
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const watchList = {};
+const DB_FILE = './database.json'; // NEW: Our database file
+
+// NEW: Load the database when the server starts
+let watchList = {};
+if (fs.existsSync(DB_FILE)) {
+  const rawData = fs.readFileSync(DB_FILE);
+  watchList = JSON.parse(rawData);
+  console.log('Database loaded successfully!');
+}
+
+// NEW: Helper function to save the database
+function saveDatabase() {
+  fs.writeFileSync(DB_FILE, JSON.stringify(watchList, null, 2));
+}
 
 async function fetchPageText(url) {
   const response = await axios.get(url);
@@ -23,17 +37,13 @@ async function explainChanges(oldText, newText) {
         {
           role: 'user',
           content: `You are a legal assistant helping normal people understand terms of service changes.
-          
-OLD TEXT (first 1000 chars): ${oldText.substring(0, 1000)}
-
-NEW TEXT (first 1000 chars): ${newText.substring(0, 1000)}
-
-In simple plain English (no legal jargon):
-1. What changed?
-2. Does this affect the user? (Yes/No and why)
-3. Impact score: rate this change 1-10 (10 = very serious)
-
-Keep your answer short and clear.`
+          OLD TEXT (first 1000 chars): ${oldText.substring(0, 1000)}
+          NEW TEXT (first 1000 chars): ${newText.substring(0, 1000)}
+          In simple plain English (no legal jargon):
+          1. What changed?
+          2. Does this affect the user? (Yes/No and why)
+          3. Impact score: rate this change 1-10 (10 = very serious)
+          Keep your answer short and clear.`
         }
       ]
     },
@@ -102,6 +112,7 @@ app.get('/', (req, res) => {
 app.post('/watch', async (req, res) => {
   const { url, label } = req.body;
   console.log(`Adding to watchlist: ${label} - ${url}`);
+  
   try {
     const text = await fetchPageText(url);
     watchList[url] = {
@@ -111,6 +122,8 @@ app.post('/watch', async (req, res) => {
       changed: false,
       explanation: null
     };
+    
+    saveDatabase(); // NEW: Save to file every time we add a new URL!
     console.log(`Successfully saved: ${label}`);
     res.redirect('/');
   } catch (err) {
@@ -131,14 +144,17 @@ async function checkAllUrls() {
       console.log(`Checking: ${url}`);
       const newText = await fetchPageText(url);
       data.lastChecked = new Date().toLocaleString();
+      
       if (newText !== data.originalText) {
         console.log(`CHANGE DETECTED at: ${url}`);
         data.changed = true;
         data.explanation = await explainChanges(data.originalText, newText);
         data.originalText = newText;
+        saveDatabase(); // NEW: Save to file if we find a change!
       } else {
         console.log(`No change at: ${url}`);
         data.changed = false;
+        saveDatabase(); // NEW: Update the "last checked" timestamp in the file
       }
     } catch (err) {
       console.log(`Error checking ${url}:`, err.message);
